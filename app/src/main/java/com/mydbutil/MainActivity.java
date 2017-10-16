@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //必须先初始化
-        DatabaseUtils.initHelper(this,"qweq");
+        DatabaseUtils.initHelper(this,Student.class);
         final Student student=new Student("张三","1001",12);
 
         tv1 = (TextView) findViewById(R.id.tv1);

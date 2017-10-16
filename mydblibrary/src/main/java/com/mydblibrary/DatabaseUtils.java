@@ -15,9 +15,9 @@ public class DatabaseUtils {
     private DatabaseUtils(){
     }
 
-    public static void initHelper(Context context, String name){
+    public static void initHelper(Context context, Class<?> table){
         if(mHelper == null){
-            mHelper = new MyOpenHelper(context,name);
+            mHelper = new MyOpenHelper(context,table);
         }
     }
     public static MyOpenHelper getHelper(){

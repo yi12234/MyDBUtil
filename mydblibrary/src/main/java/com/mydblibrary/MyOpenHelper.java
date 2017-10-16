@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.google.gson.internal.UnsafeAllocator;
 
@@ -24,8 +25,8 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
     private final static String ID = "id";
 
 
-    public MyOpenHelper(Context context, String name) {
-        super(context, name, null, 1);
+    public MyOpenHelper(Context context, Class<?> table) {
+        super(context, table.getName().replaceAll("\\.", "_"), null, 1);
     }
 
     @Override
@@ -40,12 +41,13 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
     //增
     @Override
     public void save(Object obj) {
+        SQLiteDatabase db =this.getWritableDatabase();
         //获取类类型
         Class<?> table = obj.getClass();
         //创建对应的表
         createTableIfNotExists(table);
         //具体实现保存数据方法
-        save(obj, table, getWritableDatabase());
+        save(obj, table, db);
     }
     /**
      *  保存数据的主要操作
@@ -54,10 +56,12 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
      * @param db 操作数据库
      */
     private void save(Object obj, Class<?> table, SQLiteDatabase db) {
+        Log.d("TAG", "save:=============================================obj,class,db "+obj+table+db);
         //将一个对象中的所有字段添加到该数据集中
         ContentValues contentValues = new ContentValues();
         //通过反射获取一个类中的所有属性
         Field[] declaredFields = table.getDeclaredFields();
+        Log.d("TAG", "save:=============================================declaredFields"+declaredFields.toString());
         //遍历所有的属性
         for (Field field : declaredFields) {
             //获取对应的修饰类型
@@ -190,6 +194,8 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
             }
             builder.deleteCharAt(builder.length() - 1);
             builder.append(")");
+
+            Log.d("TAG", "createTableIfNotExists: ========================================================================="+builder);
             db.execSQL(builder.toString());
         }
     }
