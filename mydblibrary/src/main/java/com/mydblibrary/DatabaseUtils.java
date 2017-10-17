@@ -10,7 +10,7 @@ import android.content.Context;
  */
 
 public class DatabaseUtils {
-    private static  MyOpenHelper mHelper;
+    private static MyOpenHelper mHelper;
 
     private DatabaseUtils(){
     }
