@@ -19,9 +19,13 @@ public interface IOpenHelper {
     //改
     void udadta(Class<?> table, Object obj, int Id);
 
-    //查
+    <T> int queryId(Class<?> table, int Id);
+
+    //查全部
     <T> List<T> queryAll(Class<T> table);
 
-
-
+    //查单个
+    <T> List<T> query(Class<T> table, int Id);
 }
+
+

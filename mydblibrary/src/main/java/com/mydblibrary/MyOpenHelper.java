@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import com.google.gson.internal.UnsafeAllocator;
 
@@ -14,12 +13,11 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.R.attr.id;
 
 /**
  * Created by Administrator on 2017/10/12.
  */
-public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
+public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper {
 
 
     private final static String ID = "id";
@@ -56,12 +54,12 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
      * @param db 操作数据库
      */
     private void save(Object obj, Class<?> table, SQLiteDatabase db) {
-        Log.d("TAG", "save:=============================================obj,class,db "+obj+table+db);
+//        Log.d("TAG", "save:=============================================obj,class,db "+obj+table+db);
         //将一个对象中的所有字段添加到该数据集中
         ContentValues contentValues = new ContentValues();
         //通过反射获取一个类中的所有属性
         Field[] declaredFields = table.getDeclaredFields();
-        Log.d("TAG", "save:=============================================declaredFields"+declaredFields.toString());
+//        Log.d("TAG", "save:=============================================declaredFields"+declaredFields.toString());
         //遍历所有的属性
         for (Field field : declaredFields) {
             //获取对应的修饰类型
@@ -91,12 +89,9 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
 
         SQLiteDatabase db = this.getWritableDatabase();
         String where = ID+ "=?";
-        String[] whereValue = {Integer.toString(Id)};
+        String[] whereValue = {Integer.toString(queryId(table,Id))};
 
         db.delete(table.getName().replaceAll("\\.", "_"), where, whereValue);
-
-
-
 
     }
     /*
@@ -128,13 +123,29 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
         }
         //对于一般的数据操作，我们采用通常是insert来插入数据，但是为了防止同一个对象的数据进行刷新，所以采用直接替换掉
         String where = ID+"=?";
-        String[] whereValue = {Integer.toString(Id)};
+        String[] whereValue = {Integer.toString(queryId(table,Id))};
         db.update(table.getName().replaceAll("\\.", "_"), contentValues, where, whereValue);
 
     }
+
+
+
+
     /*
     * ---------------------------------------------------------------------------------------------------------------------------------------------------------
     * */
+
+
+    @Override
+    public <T> int queryId(Class<?> table, int Id) {
+        SQLiteDatabase db = getReadableDatabase();
+        //获取表名，因为表名是采用完全包名的形式存储，按照表名规则，不允许有 "." 的存在,所以采用"_"进行替换
+        String tableName = table.getName().replaceAll("\\.", "_");
+        //通过表名查询所有的数据
+        Cursor cursor = db.query(tableName, null, null, null, null, null, null);
+        cursor.moveToPosition(Id);
+        return cursor.getInt(cursor.getColumnIndex(MyOpenHelper.ID));
+    }
 
     //查
     @Override
@@ -155,6 +166,27 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
         //返回结果
         return result;
 
+    }
+        //查单个
+    @Override
+    public <T> List<T> query(Class<T> table, int Id) {
+
+        //如果该表不存在数据库中，则不需要进行操作
+        if (!isTableExists(table)) {
+            return null;
+        }
+        SQLiteDatabase db = getReadableDatabase();
+        //获取表名，因为表名是采用完全包名的形式存储，按照表名规则，不允许有 "." 的存在,所以采用"_"进行替换
+        String tableName = table.getName().replaceAll("\\.", "_");
+        //通过表名查询所有的数据
+        Cursor cursor = db.query(tableName, null, null, null, null, null, null);
+        cursor.moveToPosition(Id);
+        //通过initList拿到对应的数据
+        List<T> result = initList(table, cursor);
+        //关闭游标
+        cursor.close();
+        //返回结果
+        return result;
     }
    /*
    * ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,14 +220,14 @@ public class MyOpenHelper extends SQLiteOpenHelper implements IOpenHelper{
             builder.append(ID+" Integer PRIMARY KEY AUTOINCREMENT,");
             for (Field field : table.getDeclaredFields()) {
                 int modifiers = field.getModifiers();
-                if (!field.equals(id) && !Modifier.isStatic(modifiers)) {
+                if (!field.equals("id") && !Modifier.isStatic(modifiers)) {
                     builder.append(field.getName()).append(",");
                 }
             }
             builder.deleteCharAt(builder.length() - 1);
             builder.append(")");
 
-            Log.d("TAG", "createTableIfNotExists: ========================================================================="+builder);
+//            Log.d("TAG", "createTableIfNotExists: ========================================================================="+builder);
             db.execSQL(builder.toString());
         }
     }
